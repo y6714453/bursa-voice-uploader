@@ -43,7 +43,7 @@ def format_number_hebrew(number):
             return build_hebrew_number_parts(int(number))
         else:
             whole = build_hebrew_number_parts(int(number))
-            decimal = int(str(number).split('.')[1][:2])
+            decimal = int(str(number).split('.')[1][:2])  # רק שתי ספרות אחרי הנקודה
             decimal_word = refine_hebrew_number(num2words(decimal, lang='he'))
             return f"{whole} נְקוּדָה {decimal_word}"
     except:
@@ -52,30 +52,31 @@ def format_number_hebrew(number):
 def build_hebrew_number_parts(number):
     parts = []
     thousands = number // 1000
-    hundreds = (number % 1000) // 100
-    tens = (number % 100) // 10
-    units = number % 10
-    tens_units = number % 100
+    rest = number % 1000
+    hundreds = (rest) // 100
+    tens_units = rest % 100
 
+    # אלפים עם צורת סמיכות
     if thousands:
-        if thousands in [3, 4]:
+        if thousands == 1:
+            parts.append("אֶלֶף")
+        elif thousands == 2:
+            parts.append("אַלְפַּיִם")
+        elif 3 <= thousands <= 9:
             parts.append(refine_hebrew_number(num2words(thousands, lang='he')) + "ת אֲלָפִים")
-        elif thousands < 10:
-            parts.append(refine_hebrew_number(num2words(thousands, lang='he')) + " אֶלֶף")
         else:
             parts.append(refine_hebrew_number(num2words(thousands, lang='he')) + " אֶלֶף")
 
+    # מאות
     if hundreds:
-        if thousands and (tens or units):
-            parts.append("וֵ" + refine_hebrew_number(num2words(hundreds * 100, lang='he')))
-        else:
+        if parts and (thousands <= 2 or thousands >= 10) and tens_units == 0:
             parts.append(refine_hebrew_number(num2words(hundreds * 100, lang='he')))
+        else:
+            parts.append("וֵ" + refine_hebrew_number(num2words(hundreds * 100, lang='he')))
 
+    # עשרות ויחידות
     if tens_units:
-        if hundreds:
-            # בין מאות לעשרות לא מוסיפים ו'
-            parts.append(refine_hebrew_number(num2words(tens_units, lang='he')))
-        elif thousands and not hundreds:
+        if parts and not (hundreds and tens_units < 10):
             parts.append("וֵ" + refine_hebrew_number(num2words(tens_units, lang='he')))
         else:
             parts.append(refine_hebrew_number(num2words(tens_units, lang='he')))
