@@ -75,7 +75,7 @@ def create_text(asset, data):
     else:
         intro = f"{name} נִסְחָר כָּעֵת בְּ{current}"
 
-    return (
+    full_text = (
         f"{intro} "
         f"מִתְּחִלַּת הַיּוֹם נִרְשְׁמָה {data['change_day']}. "
         f"מִתְּחִלַּת הַשָּׁבוּעַ נִרְשְׁמָה {data['change_week']}. "
@@ -83,6 +83,8 @@ def create_text(asset, data):
         f"מִתְּחִלַּת הַשָּׁנָה נִרְשְׁמָה {data['change_year']}. "
         f"הַמְּחִיר הַנּוֹכְחִי רָחוֹק מֵהַשִּׂיא בְּ{from_high} אָחוּז."
     )
+    print(f"📜 טקסט עבור {name}: {full_text}")
+    return full_text
 
 async def text_to_speech(text, filename):
     communicate = Communicate(text, voice="he-IL-AvriNeural")
@@ -150,7 +152,7 @@ async def main_loop():
             upload_to_yemot("temp.wav", path)
             print(f"✅ הועלה לשלוחה {path}")
 
-        await asyncio.sleep(180)  # כל 3 דקות
+        await asyncio.sleep(180)
 
 if __name__ == "__main__":
     asyncio.run(main_loop())
