@@ -7,12 +7,34 @@ import subprocess
 from edge_tts import Communicate
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 import requests
+import urllib.request
+import tarfile
 
 USERNAME = "0733181201"
 PASSWORD = "6714453"
 TOKEN = f"{USERNAME}:{PASSWORD}"
 ASSETS_FILE = "assets.json"
+FFMPEG_PATH = "./bin/ffmpeg"
 
+# הורדת ffmpeg אם לא קיים
+def ensure_ffmpeg():
+    if not os.path.exists(FFMPEG_PATH):
+        print("⬇️ מוריד ffmpeg...")
+        os.makedirs("bin", exist_ok=True)
+        url = "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz"
+        archive_path = "bin/ffmpeg.tar.xz"
+        extract_path = "bin"
+        urllib.request.urlretrieve(url, archive_path)
+        with tarfile.open(archive_path) as tar:
+            tar.extractall(path=extract_path)
+        for root, dirs, files in os.walk(extract_path):
+            for file in files:
+                if file == "ffmpeg":
+                    os.rename(os.path.join(root, file), FFMPEG_PATH)
+                    os.chmod(FFMPEG_PATH, 0o755)
+                    break
+
+# יצירת טקסט לפי סוג הנכס
 def create_text(asset, data):
     name = asset["name"]
     type_ = asset["type"]
@@ -50,7 +72,8 @@ async def text_to_speech(text, filename):
     await communicate.save(filename)
 
 def convert_to_wav(mp3_file, wav_file):
-    subprocess.run(["ffmpeg", "-y", "-i", mp3_file, "-ar", "8000", "-ac", "1", "-acodec", "pcm_s16le", wav_file])
+    ensure_ffmpeg()
+    subprocess.run([FFMPEG_PATH, "-y", "-i", mp3_file, "-ar", "8000", "-ac", "1", "-acodec", "pcm_s16le", wav_file])
 
 def upload_to_yemot(wav_file, path):
     m = MultipartEncoder(fields={
