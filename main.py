@@ -42,61 +42,65 @@ def format_number_hebrew(number):
         if number.is_integer():
             return build_hebrew_number_parts(int(number))
         else:
-            whole = build_hebrew_number_parts(int(number))
-            decimal = int(str(number).split('.')[1][:2])  # רק שתי ספרות אחרי הנקודה
-            decimal_word = refine_hebrew_number(num2words(decimal, lang='he'))
-            return f"{whole} נְקוּדָה {decimal_word}"
+            whole = int(number)
+            decimal_str = str(round(number, 2)).split(".")[1].ljust(2, '0')
+            decimal_num = int(decimal_str)
+            decimal_word = refine_hebrew_number(num2words(decimal_num, lang='he'))
+
+            if whole == 0:
+                return f"אֶפֶס נְקוּדָה {decimal_word}"
+            else:
+                whole_word = build_hebrew_number_parts(whole)
+                return f"{whole_word} נְקוּדָה {decimal_word}"
     except:
         return str(number)
 
 def build_hebrew_number_parts(number):
     parts = []
     thousands = number // 1000
-    rest = number % 1000
-    hundreds = (rest) // 100
-    tens_units = rest % 100
+    hundreds = (number % 1000) // 100
+    tens_units = number % 100
 
-    # אלפים עם צורת סמיכות
     if thousands:
-        if thousands == 1:
-            parts.append("אֶלֶף")
-        elif thousands == 2:
-            parts.append("אַלְפַּיִם")
-        elif 3 <= thousands <= 9:
-            parts.append(refine_hebrew_number(num2words(thousands, lang='he')) + "ת אֲלָפִים")
+        if thousands in [3, 4, 6, 7, 8, 9]:
+            word = num2words(thousands, lang='he')
+            parts.append(refine_hebrew_number(word + "ת") + " אֲלָפִים")
+        elif thousands >= 10:
+            word = num2words(thousands, lang='he')
+            parts.append(refine_hebrew_number(word) + " אֶלֶף")
         else:
-            parts.append(refine_hebrew_number(num2words(thousands, lang='he')) + " אֶלֶף")
+            word = num2words(thousands, lang='he')
+            parts.append(refine_hebrew_number(word) + " אֶלֶף")
 
-    # מאות
     if hundreds:
-        if parts and (thousands <= 2 or thousands >= 10) and tens_units == 0:
+        if thousands >= 10:
             parts.append(refine_hebrew_number(num2words(hundreds * 100, lang='he')))
         else:
             parts.append("וֵ" + refine_hebrew_number(num2words(hundreds * 100, lang='he')))
 
-    # עשרות ויחידות
     if tens_units:
-        if parts and not (hundreds and tens_units < 10):
-            parts.append("וֵ" + refine_hebrew_number(num2words(tens_units, lang='he')))
+        if hundreds:
+            if tens_units >= 10 and tens_units % 10 != 0:
+                tens = tens_units - (tens_units % 10)
+                units = tens_units % 10
+                parts.append(refine_hebrew_number(num2words(tens, lang='he')) + " ו" + refine_hebrew_number(num2words(units, lang='he')))
+            else:
+                parts.append(refine_hebrew_number(num2words(tens_units, lang='he')))
         else:
-            parts.append(refine_hebrew_number(num2words(tens_units, lang='he')))
+            parts.append("וֵ" + refine_hebrew_number(num2words(tens_units, lang='he')))
 
     return ' '.join(parts)
 
 # שיפור ו' חיבור
-
 def refine_hebrew_number(text):
     text = text.replace(" ו", " וֵ")
     words = text.split()
     for i, word in enumerate(words):
-        if word == "אפס" and i > 0 and words[i - 1] == "נְקוּדָה":
-            continue
         if word == "אחד" and i > 0 and words[i - 1] == "וֵ":
             words[i] = "אֶחָד"
     return ' '.join(words)
 
 # יצירת טקסט לפי סוג הנכס
-
 def create_text(asset, data):
     name = asset["name"]
     type_ = asset["type"]
