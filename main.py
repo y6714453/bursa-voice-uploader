@@ -35,20 +35,43 @@ def ensure_ffmpeg():
                     os.chmod(FFMPEG_PATH, 0o755)
                     break
 
-# המרה למילים בעברית כולל תיקוני חיבור ואלפים
+# עיבוד מספרים עם "ו" לפי כללים מדויקים
 def format_number_hebrew(number):
     try:
         number = float(number)
         if number.is_integer():
-            return refine_hebrew_number(num2words(int(number), lang='he'))
+            return build_hebrew_number_parts(int(number))
         else:
-            parts = str(number).split('.')
-            whole = refine_hebrew_number(num2words(int(parts[0]), lang='he'))
-            decimal = int(parts[1])
+            whole = build_hebrew_number_parts(int(number))
+            decimal = int(str(number).split('.')[1])
             decimal_word = refine_hebrew_number(num2words(decimal, lang='he'))
             return f"{whole} נְקוּדָה {decimal_word}"
     except:
         return str(number)
+
+def build_hebrew_number_parts(number):
+    parts = []
+    thousands = number // 1000
+    hundreds = (number % 1000) // 100
+    tens_units = number % 100
+
+    if thousands:
+        parts.append(refine_hebrew_number(num2words(thousands, lang='he')) + " אֶלֶף")
+    if hundreds:
+        if parts:
+            parts.append("וֵ" + refine_hebrew_number(num2words(hundreds * 100, lang='he')))
+        else:
+            parts.append(refine_hebrew_number(num2words(hundreds * 100, lang='he')))
+    if tens_units:
+        # אם אין מאות – נוסיף "ו" בין אלפים לעשרות-יחידות
+        if parts and (hundreds == 0):
+            parts.append("וֵ" + refine_hebrew_number(num2words(tens_units, lang='he')))
+        else:
+            parts.append(refine_hebrew_number(num2words(tens_units, lang='he')))
+
+    return ' '.join(parts)
+
+# שיפור ו' חיבור
 
 def refine_hebrew_number(text):
     text = text.replace(" ו", " וֵ")
@@ -87,16 +110,15 @@ def create_text(asset, data):
     else:
         intro = f"{name} נִסְחָר כָּעֵת בְּ{current}"
 
-    silence = " [silence:500ms] "
+    pause = " <break time=\"500ms\"/>"
     full_text = (
-        f"{intro}.{silence}"
-        f"{data['change_day']}.{silence}"
-        f"{data['change_week']}.{silence}"
-        f"{data['change_3m']}.{silence}"
-        f"{data['change_year']}.{silence}"
+        f"{intro}{pause}"
+        f"{data['change_day']}{pause}"
+        f"{data['change_week']}{pause}"
+        f"{data['change_3m']}{pause}"
+        f"{data['change_year']}{pause}"
         f"הַמְּחִיר הַנּוֹכְחִי רָחוֹק מֵהַשִּׂיא בְּ{from_high} אָחוּז."
     )
-
     print(f"📜 טקסט עבור {name}: {full_text}")
     return full_text
 
