@@ -1,4 +1,4 @@
-
+[
   { "symbol": "^GSPC", "name": "אֵס אֵנְד פִּי חָמֵש מֵאוֹת", "type": "index", "target_path": "ivr2:/1/1/1/" },
   { "symbol": "^NDX", "name": "נָאסְדָק", "type": "index", "target_path": "ivr2:/1/1/2/" },
   { "symbol": "^DJI", "name": "דָאוֹ ג'וֹנְס", "type": "index", "target_path": "ivr2:/1/1/3/" },
