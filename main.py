@@ -9,7 +9,6 @@ from requests_toolbelt.multipart.encoder import MultipartEncoder
 import requests
 import urllib.request
 import tarfile
-from num2words import num2words
 
 USERNAME = "0733181201"
 PASSWORD = "6714453"
@@ -35,85 +34,81 @@ def ensure_ffmpeg():
                     os.chmod(FFMPEG_PATH, 0o755)
                     break
 
-# עיבוד מספרים עם "ו" לפי כללים מדויקים
+# תרגום מספרים למילים בעברית עם התאמות לנקיבה ואלפים
+HEBREW_UNITS = ["", "אַחַת", "שְׁתָיִם", "שָׁלֹשׁ", "אַרְבַּע", "חָמֵשׁ", "שֵׁשׁ", "שֶׁבַע", "שְׁמוֹנֶה", "תֵשַׁע"]
+HEBREW_TENS = ["", "עֶשֶׂר", "עֶשְׂרִים", "שְׁלוֹשִׁים", "אַרְבָּעִים", "חֲמִשִׁים", "שִׁשִׁים", "שִׁבְעִים", "שְׁמוֹנִים", "תִשְׁעִים"]
+HEBREW_TEENS = ["עֶשֶׂר", "אֵחָד עֶשְׂרֵה", "שְׁתֵים עֶשְׂרֵה", "שְׁלֹשׁ עֶשְׂרֵה", "אַרְבַּע עֶשְׂרֵה", "חָמֵשׁ עֶשְׂרֵה", "שֵׁשׁ עֶשְׂרֵה", "שְׁבַע עֶשְׂרֵה", "שְׁמוֹנֶה עֶשְׂרֵה", "תְשַׁע עֶשְׂרֵה"]
+HEBREW_THOUSANDS = ["", "אֶלֶף", "אַלְפָיִם", "שְׁלוֹשְׁת אַלָפִים", "אַרְבַּעַת אַלָפִים", "חֲמֵשְׁת אַלָפִים", "שֵׁשְׁת אַלָפִים", "שְׁבָת אַלָפִים", "שְׁמוֹנַת אַלָפִים", "תְשָׁת אַלָפִים"]
+
+# תרגום מספרים לניסוח מלא בעברית לנקיבה
+def number_to_hebrew(n):
+    if n == 0:
+        return "אֵפֵס"
+    if 10 < n < 20:
+        return HEBREW_TEENS[n - 10]
+    tens = n // 10
+    units = n % 10
+    parts = []
+    if tens:
+        parts.append(HEBREW_TENS[tens])
+    if units:
+        if tens:
+            parts.append("ו" + HEBREW_UNITS[units])
+        else:
+            parts.append(HEBREW_UNITS[units])
+    return " ".join(parts)
+
+# תרגום מספרים גדולים עם אלפים, מאות, עשרות ויחידות
+
 def format_number_hebrew(number):
     try:
         number = float(number)
         if number.is_integer():
-            return build_hebrew_number_parts(int(number))
+            number = int(number)
+            if number >= 1000:
+                thousands = number // 1000
+                rest = number % 1000
+                if 1 <= thousands < 10:
+                    thousands_text = HEBREW_THOUSANDS[thousands]
+                else:
+                    thousands_text = number_to_hebrew(thousands) + " אֶלֶף"
+                rest_text = number_to_hebrew(rest) if rest else ""
+                return f"{thousands_text} ו{rest_text}" if rest_text else thousands_text
+            else:
+                return number_to_hebrew(number)
         else:
-            whole = build_hebrew_number_parts(int(number))
-            decimal = int(str(number).split('.')[1][:2])
-            decimal_word = refine_hebrew_number(num2words(decimal, lang='he'))
-            return f"{whole} נְקוּדָה {decimal_word}"
+            parts = str(number).split(".")
+            whole = int(parts[0])
+            decimal = int(parts[1][:2])  # רק שתי ספרות אחרי נקודה
+            return f"{format_number_hebrew(whole)} נקודה {number_to_hebrew(decimal)}"
     except:
         return str(number)
-
-def build_hebrew_number_parts(number):
-    parts = []
-    thousands = number // 1000
-    hundreds = (number % 1000) // 100
-    tens_units = number % 100
-
-    if thousands:
-        if thousands == 1:
-            parts.append("אֶלֶף")
-        elif 2 <= thousands <= 9:
-            text = refine_hebrew_number(num2words(thousands, lang='he'))
-            parts.append(text[:-1] + "ֶת אֲלָפִים")
-        else:
-            parts.append(refine_hebrew_number(num2words(thousands, lang='he')) + " אֶלֶף")
-
-    if hundreds:
-        if parts and not (thousands and hundreds and tens_units):
-            parts.append("וֵ" + refine_hebrew_number(num2words(hundreds * 100, lang='he')))
-        else:
-            parts.append(refine_hebrew_number(num2words(hundreds * 100, lang='he')))
-
-    if tens_units:
-        if parts and (hundreds == 0):
-            parts.append("וֵ" + refine_hebrew_number(num2words(tens_units, lang='he')))
-        else:
-            parts.append(refine_hebrew_number(num2words(tens_units, lang='he')))
-
-    return ' '.join(parts)
-
-# שיפור ו' חיבור
-def refine_hebrew_number(text):
-    text = text.replace(" ו", " וֵ")
-    words = text.split()
-    for i, word in enumerate(words):
-        if word == "אפס" and i > 0 and words[i - 1] == "נְקוּדָה":
-            continue
-        if word == "אחד" and i > 0 and words[i - 1] == "וֵ":
-            words[i] = "אֶחָד"
-    return ' '.join(words)
 
 # יצירת טקסט לפי סוג הנכס
 def create_text(asset, data):
     name = asset["name"]
     type_ = asset["type"]
-    currency = "שְׁקָלִים" if type_ == "stock_il" else "דּוֹלָר"
-    unit = "נְקוּדוֹת" if type_ in ["index", "sector"] else currency
+    currency = "שְקָלִים" if type_ == "stock_il" else "דוֹלָר"
+    unit = "נֵקוּדוֹת" if type_ in ["index", "sector"] else currency
     current = format_number_hebrew(data['current'])
     from_high = format_number_hebrew(data['from_high'])
 
     if type_ == "index":
-        intro = f"מָדָד {name} עוֹמֵד כָּעֵת עַל {current} {unit}."
+        intro = f"מָדָד {name} עומד כָּעֵת על {current} {unit}."
     elif type_ == "sector":
-        intro = f"סֶקְטוֹר {name} עוֹמֵד כָּעֵת עַל {current} {unit}."
+        intro = f"סֵקְטוֹר {name} עוֹמֵד כָּעֵת על {current} {unit}."
     elif type_ == "stock_il":
-        intro = f"מַנְיָת {name} נִסְחֶרֶת כָּעֵת בְּשַׁעַר שֶׁל {current} {unit}."
+        intro = f"מֵנָיָת {name} נִסְחֵרֵת כָּעֵת בֵשׁוֹבִי שֵׁל {current} {unit}."
     elif type_ == "stock_us":
-        intro = f"מַנְיָת {name} נִסְחֶרֶת כָּעֵת בְּשַׁעַר שֶׁל {current} {unit}."
+        intro = f"מֵנָיָת {name} נִסְחֵרֵת כָּעֵת בֵשׁוֹבִי שֵׁל {current} {unit}."
     elif type_ == "crypto":
-        intro = f"מַטְבֵּעַ {name} נִסְחָר כָּעֵת בְּשַׁעַר שֶׁל {current} דּוֹלָר."
+        intro = f"מָטְבֵע {name} נסחר כָּעֵת בֵשָׁעָר שֵׁל {current} דוֹלָר."
     elif type_ == "forex":
-        intro = f"{name} אֶחָד שָׁוֶה {current} שֶׁקֶל."
+        intro = f"{name} אֵחָד שָבֵה לֵ {current} שְקָלִים."
     elif type_ == "commodity":
-        intro = f"{name} נִסְחָר כָּעֵת בְּשַׁעַר שֶׁל {current} דּוֹלָר."
+        intro = f"{name} נסחר כָּעֵת בשער של {current} דוֹלָר."
     else:
-        intro = f"{name} נִסְחָר כָּעֵת בְּ{current}"
+        intro = f"{name} נסחר כעת ב{current}"
 
     full_text = (
         f"{intro} "
@@ -121,7 +116,7 @@ def create_text(asset, data):
         f"{data['change_week']}. "
         f"{data['change_3m']}. "
         f"{data['change_year']}. "
-        f"הַמְּחִיר הַנּוֹכְחִי רָחוֹק מֵהַשִּׂיא בְּ{from_high} אָחוּז."
+        f"הָמֵחִיר הָנוֹכֵחִי רָחוֹק מֵהָשִׂיא ב{from_high} אָחוּז."
     )
     print(f"📜 טקסט עבור {name}: {full_text}")
     return full_text
@@ -157,17 +152,17 @@ def get_stock_data(symbol):
     def format_change(from_, to, prefix):
         percent = round((to - from_) / from_ * 100, 2)
         if percent == 0:
-            return f"{prefix} לֹא חָל שִׁנּוּי."
-        direction = "עֲלִיָּה" if percent > 0 else "יְרִידָה"
-        return f"{prefix} נִרְשְׁמָה {direction} שֶׁל {format_number_hebrew(abs(percent))} אָחוּז"
+            return f"{prefix} לא חל שינוי"
+        direction = "עלייה" if percent > 0 else "ירידה"
+        return f"{prefix} נרשמה {direction} של {format_number_hebrew(abs(percent))} אחוז"
 
     from_high = round((high - today) / high * 100, 2)
     return {
         "current": today,
-        "change_day": format_change(hist.iloc[-2]["Close"], today, "מִתְּחִלַּת הַיּוֹם"),
-        "change_week": format_change(week, today, "מִתְּחִלַּת הַשָּׁבוּעַ"),
-        "change_3m": format_change(quarter, today, "בִּשְׁלוֹשֶׁת הַחֳדָשִׁים הָאַחֲרוֹנִים"),
-        "change_year": format_change(year, today, "מִתְּחִלַּת הַשָּׁנָה"),
+        "change_day": format_change(hist.iloc[-2]["Close"], today, "מתחילת היום"),
+        "change_week": format_change(week, today, "מתחילת השבוע"),
+        "change_3m": format_change(quarter, today, "בשלושת החודשים האחרונים"),
+        "change_year": format_change(year, today, "מתחילת השנה"),
         "from_high": from_high
     }
 
