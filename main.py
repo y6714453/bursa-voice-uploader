@@ -63,13 +63,13 @@ def create_text(asset, data):
     elif type_ == "sector":
         intro = f"סֶקְטוֹר {name} עוֹמֵד כָּעֵת עַל {current} {unit}."
     elif type_ == "stock_il":
-        intro = f"מַנְיָת {name} נִסְחֶרֶת כָּעֵת בְּשַׁעַר שֶׁל {current} {unit}."
+        intro = f"מֵנָיָת {name} נִסְחֶרֶת כָּעֵת בֵשוֹבִי שֶׁל {current} {unit}."
     elif type_ == "stock_us":
-        intro = f"מַנְיָת {name} נִסְחֶרֶת כָּעֵת בְּשַׁעַר שֶׁל {current} {unit}."
+        intro = f"מֵנָיָת {name} נִסְחֶרֶת כָּעֵת בֵשוֹבִי שֶׁל {current} {unit}."
     elif type_ == "crypto":
         intro = f"מַטְבֵּעַ {name} נִסְחָר כָּעֵת בְּשַׁעַר שֶׁל {current} דּוֹלָר."
     elif type_ == "forex":
-        intro = f"{name} אֶחָד שָׁוֶה {current} שֶׁקֶל."
+        intro = f"{name} אֶחָד שָבֵה {current} שֶׁקֶל."
     elif type_ == "commodity":
         intro = f"{name} נִסְחָר כָּעֵת בְּשַׁעַר שֶׁל {current} דּוֹלָר."
     else:
@@ -77,11 +77,11 @@ def create_text(asset, data):
 
     full_text = (
         f"{intro} "
-        f"מִתְּחִלַּת הַיּוֹם נִרְשְׁמָה {data['change_day']}. "
-        f"מִתְּחִלַּת הַשָּׁבוּעַ נִרְשְׁמָה {data['change_week']}. "
+        f"מִתְחִילָת הָיוֹם נִרְשְׁמָה {data['change_day']}. "
+        f"מִתְחִילָת הַשָּׁבוּעַ נִרְשְׁמָה {data['change_week']}. "
         f"בִּשְׁלוֹשֶׁת הַחֳדָשִׁים הָאַחֲרוֹנִים נִרְשְׁמָה {data['change_3m']}. "
-        f"מִתְּחִלַּת הַשָּׁנָה נִרְשְׁמָה {data['change_year']}. "
-        f"הַמְּחִיר הַנּוֹכְחִי רָחוֹק מֵהַשיא בְּ{from_high} אָחוּז."
+        f"מִתְחִילָת הַשָּׁנָה נִרְשְׁמָה {data['change_year']}. "
+        f"הָמֵחִיר הָנוֹכֵחִי רָחוֹק מֵהַשִׂיא בְּ{from_high} אָחוּז."
     )
     print(f"📜 טקסט עבור {name}: {full_text}")
     return full_text
