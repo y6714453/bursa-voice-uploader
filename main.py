@@ -34,13 +34,11 @@ def ensure_ffmpeg():
                     os.chmod(FFMPEG_PATH, 0o755)
                     break
 
-# תרגום מספרים למילים בעברית עם התאמות לנקיבה ואלפים
 HEBREW_UNITS = ["", "אַחַת", "שְׁתָיִם", "שָׁלֹשׁ", "אַרְבַּע", "חָמֵשׁ", "שֵׁשׁ", "שֶׁבַע", "שְׁמוֹנֶה", "תֵשַׁע"]
 HEBREW_TENS = ["", "עֶשֶׂר", "עֶשְׂרִים", "שְׁלוֹשִׁים", "אַרְבָּעִים", "חֲמִשִׁים", "שִׁשִׁים", "שִׁבְעִים", "שְׁמוֹנִים", "תִשְׁעִים"]
 HEBREW_TEENS = ["עֶשֶׂר", "אֵחָד עֶשְׂרֵה", "שְׁתֵים עֶשְׂרֵה", "שְׁלֹשׁ עֶשְׂרֵה", "אַרְבַּע עֶשְׂרֵה", "חָמֵשׁ עֶשְׂרֵה", "שֵׁשׁ עֶשְׂרֵה", "שְׁבַע עֶשְׂרֵה", "שְׁמוֹנֶה עֶשְׂרֵה", "תְשַׁע עֶשְׂרֵה"]
 HEBREW_THOUSANDS = ["", "אֶלֶף", "אַלְפָיִם", "שְׁלוֹשְׁת אַלָפִים", "אַרְבַּעַת אַלָפִים", "חֲמֵשְׁת אַלָפִים", "שֵׁשְׁת אַלָפִים", "שְׁבָת אַלָפִים", "שְׁמוֹנַת אַלָפִים", "תְשָׁת אַלָפִים"]
 
-# תרגום מספרים לניסוח מלא בעברית לנקיבה
 def number_to_hebrew(n):
     if n == 0:
         return "אֵפֵס"
@@ -58,11 +56,12 @@ def number_to_hebrew(n):
             parts.append(HEBREW_UNITS[units])
     return " ".join(parts)
 
-# תרגום מספרים גדולים עם אלפים, מאות, עשרות ויחידות
-
 def format_number_hebrew(number):
     try:
         number = float(number)
+        if number >= 1000 and not number.is_integer():
+            number = round(number)  # ביטול נקודה עשרונית במספרים מעל 1000
+
         if number.is_integer():
             number = int(number)
             if number >= 1000:
@@ -79,12 +78,11 @@ def format_number_hebrew(number):
         else:
             parts = str(number).split(".")
             whole = int(parts[0])
-            decimal = int(parts[1][:2])  # רק שתי ספרות אחרי נקודה
-            return f"{format_number_hebrew(whole)} נקודה {number_to_hebrew(decimal)}"
+            decimal = int(parts[1][:2])
+            return f"{format_number_hebrew(whole)} נְקוּדָה {number_to_hebrew(decimal)}"
     except:
         return str(number)
 
-# יצירת טקסט לפי סוג הנכס
 def create_text(asset, data):
     name = asset["name"]
     type_ = asset["type"]
@@ -122,7 +120,7 @@ def create_text(asset, data):
     return full_text
 
 async def text_to_speech(text, filename):
-    communicate = Communicate(text, voice="he-IL-AvriNeural", rate="-10%")
+    communicate = Communicate(text, voice="he-IL-AvriNeural", rate="-20%")
     await communicate.save(filename)
 
 def convert_to_wav(mp3_file, wav_file):
