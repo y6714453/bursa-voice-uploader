@@ -35,16 +35,16 @@ def ensure_ffmpeg():
                     os.chmod(FFMPEG_PATH, 0o755)
                     break
 
-# המרה למילים בעברית (באופן גס)
+# המרה למילים בעברית (מעוגל לשתי ספרות אחרי הנקודה)
 def to_hebrew_words(number):
     try:
-        number = float(number)
+        number = round(float(number), 2)
         if number.is_integer():
             return num2words(int(number), lang='he')
         else:
             parts = str(number).split('.')
             whole = num2words(int(parts[0]), lang='he')
-            fraction = ' '.join([num2words(int(d), lang='he') for d in parts[1]])
+            fraction = num2words(int(parts[1]), lang='he')
             return f"{whole} נְקוּדָה {fraction}"
     except:
         return str(number)
@@ -81,7 +81,7 @@ def create_text(asset, data):
         f"מִתְּחִלַּת הַשָּׁבוּעַ נִרְשְׁמָה {data['change_week']}. "
         f"בִּשְׁלוֹשֶׁת הַחֳדָשִׁים הָאַחֲרוֹנִים נִרְשְׁמָה {data['change_3m']}. "
         f"מִתְּחִלַּת הַשָּׁנָה נִרְשְׁמָה {data['change_year']}. "
-        f"הַמְּחִיר הַנּוֹכְחִי רָחוֹק מֵהַשִּׂיא בְּ{from_high} אָחוּז."
+        f"הַמְּחִיר הַנּוֹכְחִי רָחוֹק מֵהַשיא בְּ{from_high} אָחוּז."
     )
     print(f"📜 טקסט עבור {name}: {full_text}")
     return full_text
