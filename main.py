@@ -51,7 +51,6 @@ def format_number_hebrew(number):
         return str(number)
 
 def refine_hebrew_number(text):
-    # תיקון 'ו' חיבור עם ניקוד
     text = text.replace(" ו", " וֵ")
     words = text.split()
     for i, word in enumerate(words):
@@ -62,6 +61,7 @@ def refine_hebrew_number(text):
     return ' '.join(words)
 
 # יצירת טקסט לפי סוג הנכס
+
 def create_text(asset, data):
     name = asset["name"]
     type_ = asset["type"]
@@ -75,11 +75,11 @@ def create_text(asset, data):
     elif type_ == "sector":
         intro = f"סֶקְטוֹר {name} עוֹמֵד כָּעֵת עַל {current} {unit}."
     elif type_ == "stock_il":
-        intro = f"מֵנָיָת {name} נִסְחֶרֶת כָּעֵת בֵשוֹבִי שֶׁל {current} {unit}."
+        intro = f"מַנְיָת {name} נִסְחֶרֶת כָּעֵת בְּשַׁעַר שֶׁל {current} {unit}."
     elif type_ == "stock_us":
-        intro = f"מֵנָיָת {name} נִסְחֶרֶת כָּעֵת בֵשוֹבִי שֶׁל {current} {unit}."
+        intro = f"מַנְיָת {name} נִסְחֶרֶת כָּעֵת בְּשַׁעַר שֶׁל {current} {unit}."
     elif type_ == "crypto":
-        intro = f"מַטְבֵּעַ {name} נִסְחָר כָּעֵת בְּשַׁעַר שֶׁל {current} דוֹלָר."
+        intro = f"מַטְבֵּעַ {name} נִסְחָר כָּעֵת בְּשַׁעַר שֶׁל {current} דּוֹלָר."
     elif type_ == "forex":
         intro = f"{name} אֶחָד שָׁוֶה {current} שֶׁקֶל."
     elif type_ == "commodity":
@@ -87,19 +87,21 @@ def create_text(asset, data):
     else:
         intro = f"{name} נִסְחָר כָּעֵת בְּ{current}"
 
+    silence = " [silence:500ms] "
     full_text = (
-        f"{intro} "
-        f"{data['change_day']} "
-        f"{data['change_week']} "
-        f"{data['change_3m']} "
-        f"{data['change_year']} "
-        f"הַמְּחִיר הַנּוֹכְחִי רָחוֹק מֵהַשִׂיא בְּ{from_high} אָחוּז."
+        f"{intro}.{silence}"
+        f"{data['change_day']}.{silence}"
+        f"{data['change_week']}.{silence}"
+        f"{data['change_3m']}.{silence}"
+        f"{data['change_year']}.{silence}"
+        f"הַמְּחִיר הַנּוֹכְחִי רָחוֹק מֵהַשִּׂיא בְּ{from_high} אָחוּז."
     )
+
     print(f"📜 טקסט עבור {name}: {full_text}")
     return full_text
 
 async def text_to_speech(text, filename):
-    communicate = Communicate(text, voice="he-IL-AvriNeural", rate="0%")
+    communicate = Communicate(text, voice="he-IL-AvriNeural", rate="-10%")
     await communicate.save(filename)
 
 def convert_to_wav(mp3_file, wav_file):
@@ -129,17 +131,17 @@ def get_stock_data(symbol):
     def format_change(from_, to, prefix):
         percent = round((to - from_) / from_ * 100, 2)
         if percent == 0:
-            return f"{prefix} לֹא חָל שִׁינוּי."
-        direction = "עָלִיָה" if percent > 0 else "יְרִידָה"
+            return f"{prefix} לֹא חָל שִׁנּוּי."
+        direction = "עֲלִיָּה" if percent > 0 else "יְרִידָה"
         return f"{prefix} נִרְשְׁמָה {direction} שֶׁל {format_number_hebrew(abs(percent))} אָחוּז."
 
     from_high = round((high - today) / high * 100, 2)
     return {
         "current": today,
-        "change_day": format_change(hist.iloc[-2]["Close"], today, "מִתְחִילָת הָיוֹם"),
-        "change_week": format_change(week, today, "מִתְחִילָת הָשָבוּעָ"),
-        "change_3m": format_change(quarter, today, "בִּשְׁלוֹשֶׁת הָחוֹדָשִׁים הָאַחֲרוֹנִים"),
-        "change_year": format_change(year, today, "מִתְחִילָת הַשָׁנָה"),
+        "change_day": format_change(hist.iloc[-2]["Close"], today, "מִתְּחִלַּת הַיּוֹם"),
+        "change_week": format_change(week, today, "מִתְּחִלַּת הַשָּׁבוּעַ"),
+        "change_3m": format_change(quarter, today, "בִּשְׁלוֹשֶׁת הַחֳדָשִׁים הָאַחֲרוֹנִים"),
+        "change_year": format_change(year, today, "מִתְּחִלַּת הַשָּׁנָה"),
         "from_high": from_high
     }
 
