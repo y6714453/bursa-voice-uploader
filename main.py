@@ -42,16 +42,10 @@ def format_number_hebrew(number):
         if number.is_integer():
             return build_hebrew_number_parts(int(number))
         else:
-            whole = int(number)
-            decimal_str = str(round(number, 2)).split(".")[1].ljust(2, '0')
-            decimal_num = int(decimal_str)
-            decimal_word = refine_hebrew_number(num2words(decimal_num, lang='he'))
-
-            if whole == 0:
-                return f"אֶפֶס נְקוּדָה {decimal_word}"
-            else:
-                whole_word = build_hebrew_number_parts(whole)
-                return f"{whole_word} נְקוּדָה {decimal_word}"
+            whole = build_hebrew_number_parts(int(number))
+            decimal = int(str(number).split('.')[1][:2])
+            decimal_word = refine_hebrew_number(num2words(decimal, lang='he'))
+            return f"{whole} נְקוּדָה {decimal_word}"
     except:
         return str(number)
 
@@ -62,32 +56,25 @@ def build_hebrew_number_parts(number):
     tens_units = number % 100
 
     if thousands:
-        if thousands in [3, 4, 6, 7, 8, 9]:
-            word = num2words(thousands, lang='he')
-            parts.append(refine_hebrew_number(word + "ת") + " אֲלָפִים")
-        elif thousands >= 10:
-            word = num2words(thousands, lang='he')
-            parts.append(refine_hebrew_number(word) + " אֶלֶף")
+        if thousands == 1:
+            parts.append("אֶלֶף")
+        elif 2 <= thousands <= 9:
+            text = refine_hebrew_number(num2words(thousands, lang='he'))
+            parts.append(text[:-1] + "ֶת אֲלָפִים")
         else:
-            word = num2words(thousands, lang='he')
-            parts.append(refine_hebrew_number(word) + " אֶלֶף")
+            parts.append(refine_hebrew_number(num2words(thousands, lang='he')) + " אֶלֶף")
 
     if hundreds:
-        if thousands >= 10:
-            parts.append(refine_hebrew_number(num2words(hundreds * 100, lang='he')))
-        else:
+        if parts and not (thousands and hundreds and tens_units):
             parts.append("וֵ" + refine_hebrew_number(num2words(hundreds * 100, lang='he')))
+        else:
+            parts.append(refine_hebrew_number(num2words(hundreds * 100, lang='he')))
 
     if tens_units:
-        if hundreds:
-            if tens_units >= 10 and tens_units % 10 != 0:
-                tens = tens_units - (tens_units % 10)
-                units = tens_units % 10
-                parts.append(refine_hebrew_number(num2words(tens, lang='he')) + " ו" + refine_hebrew_number(num2words(units, lang='he')))
-            else:
-                parts.append(refine_hebrew_number(num2words(tens_units, lang='he')))
-        else:
+        if parts and (hundreds == 0):
             parts.append("וֵ" + refine_hebrew_number(num2words(tens_units, lang='he')))
+        else:
+            parts.append(refine_hebrew_number(num2words(tens_units, lang='he')))
 
     return ' '.join(parts)
 
@@ -96,6 +83,8 @@ def refine_hebrew_number(text):
     text = text.replace(" ו", " וֵ")
     words = text.split()
     for i, word in enumerate(words):
+        if word == "אפס" and i > 0 and words[i - 1] == "נְקוּדָה":
+            continue
         if word == "אחד" and i > 0 and words[i - 1] == "וֵ":
             words[i] = "אֶחָד"
     return ' '.join(words)
@@ -126,13 +115,12 @@ def create_text(asset, data):
     else:
         intro = f"{name} נִסְחָר כָּעֵת בְּ{current}"
 
-    pause = " <break time=\"500ms\"/>"
     full_text = (
-        f"{intro}{pause}"
-        f"{data['change_day']}{pause}"
-        f"{data['change_week']}{pause}"
-        f"{data['change_3m']}{pause}"
-        f"{data['change_year']}{pause}"
+        f"{intro} "
+        f"{data['change_day']}. "
+        f"{data['change_week']}. "
+        f"{data['change_3m']}. "
+        f"{data['change_year']}. "
         f"הַמְּחִיר הַנּוֹכְחִי רָחוֹק מֵהַשִּׂיא בְּ{from_high} אָחוּז."
     )
     print(f"📜 טקסט עבור {name}: {full_text}")
@@ -171,7 +159,7 @@ def get_stock_data(symbol):
         if percent == 0:
             return f"{prefix} לֹא חָל שִׁנּוּי."
         direction = "עֲלִיָּה" if percent > 0 else "יְרִידָה"
-        return f"{prefix} נִרְשְׁמָה {direction} שֶׁל {format_number_hebrew(abs(percent))} אָחוּז."
+        return f"{prefix} נִרְשְׁמָה {direction} שֶׁל {format_number_hebrew(abs(percent))} אָחוּז"
 
     from_high = round((high - today) / high * 100, 2)
     return {
