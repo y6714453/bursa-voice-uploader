@@ -9,6 +9,7 @@ from requests_toolbelt.multipart.encoder import MultipartEncoder
 import requests
 import urllib.request
 import tarfile
+from num2words import num2words
 
 USERNAME = "0733181201"
 PASSWORD = "6714453"
@@ -34,29 +35,45 @@ def ensure_ffmpeg():
                     os.chmod(FFMPEG_PATH, 0o755)
                     break
 
+# המרה למילים בעברית (באופן גס)
+def to_hebrew_words(number):
+    try:
+        number = float(number)
+        if number.is_integer():
+            return num2words(int(number), lang='he')
+        else:
+            parts = str(number).split('.')
+            whole = num2words(int(parts[0]), lang='he')
+            fraction = ' '.join([num2words(int(d), lang='he') for d in parts[1]])
+            return f"{whole} נְקוּדָה {fraction}"
+    except:
+        return str(number)
+
 # יצירת טקסט לפי סוג הנכס
 def create_text(asset, data):
     name = asset["name"]
     type_ = asset["type"]
     currency = "שְׁקָלִים" if type_ == "stock_il" else "דּוֹלָר"
     unit = "נְקוּדוֹת" if type_ in ["index", "sector"] else currency
+    current = to_hebrew_words(data['current'])
+    from_high = to_hebrew_words(data['from_high'])
 
     if type_ == "index":
-        intro = f"מָדָד {name} עוֹמֵד כָּעֵת עַל {data['current']} {unit}."
+        intro = f"מָדָד {name} עוֹמֵד כָּעֵת עַל {current} {unit}."
     elif type_ == "sector":
-        intro = f"סֶקְטוֹר {name} עוֹמֵד כָּעֵת עַל {data['current']} {unit}."
+        intro = f"סֶקְטוֹר {name} עוֹמֵד כָּעֵת עַל {current} {unit}."
     elif type_ == "stock_il":
-        intro = f"מַנְיָת {name} נִסְחֶרֶת כָּעֵת בְּשַׁעַר שֶׁל {data['current']} {unit}."
+        intro = f"מַנְיָת {name} נִסְחֶרֶת כָּעֵת בְּשַׁעַר שֶׁל {current} {unit}."
     elif type_ == "stock_us":
-        intro = f"מַנְיָת {name} נִסְחֶרֶת כָּעֵת בְּשַׁעַר שֶׁל {data['current']} {unit}."
+        intro = f"מַנְיָת {name} נִסְחֶרֶת כָּעֵת בְּשַׁעַר שֶׁל {current} {unit}."
     elif type_ == "crypto":
-        intro = f"מַטְבֵּעַ {name} נִסְחָר כָּעֵת בְּשַׁעַר שֶׁל {data['current']} דּוֹלָר."
+        intro = f"מַטְבֵּעַ {name} נִסְחָר כָּעֵת בְּשַׁעַר שֶׁל {current} דּוֹלָר."
     elif type_ == "forex":
-        intro = f"{name} אֶחָד שָׁוֶה {data['current']} שֶׁקֶל."
+        intro = f"{name} אֶחָד שָׁוֶה {current} שֶׁקֶל."
     elif type_ == "commodity":
-        intro = f"{name} נִסְחָר כָּעֵת בְּשַׁעַר שֶׁל {data['current']} דּוֹלָר."
+        intro = f"{name} נִסְחָר כָּעֵת בְּשַׁעַר שֶׁל {current} דּוֹלָר."
     else:
-        intro = f"{name} נִסְחָר כָּעֵת בְּ{data['current']}"
+        intro = f"{name} נִסְחָר כָּעֵת בְּ{current}"
 
     return (
         f"{intro} "
@@ -64,7 +81,7 @@ def create_text(asset, data):
         f"מִתְּחִלַּת הַשָּׁבוּעַ נִרְשְׁמָה {data['change_week']}. "
         f"בִּשְׁלוֹשֶׁת הַחֳדָשִׁים הָאַחֲרוֹנִים נִרְשְׁמָה {data['change_3m']}. "
         f"מִתְּחִלַּת הַשָּׁנָה נִרְשְׁמָה {data['change_year']}. "
-        f"הַמְּחִיר הַנּוֹכְחִי רָחוֹק מֵהַשִּׂיא בְּ{data['from_high']} אָחוּז."
+        f"הַמְּחִיר הַנּוֹכְחִי רָחוֹק מֵהַשִּׂיא בְּ{from_high} אָחוּז."
     )
 
 async def text_to_speech(text, filename):
@@ -98,11 +115,11 @@ def get_stock_data(symbol):
     def format_change(from_, to):
         percent = round((to - from_) / from_ * 100, 2)
         direction = "עֲלִיָּה" if percent > 0 else "יְרִידָה" if percent < 0 else "שְׁמִירָה עַל יַצִּיבוּת"
-        return f"{direction} שֶׁל {abs(percent)} אָחוּז"
+        return f"{direction} שֶׁל {to_hebrew_words(abs(percent))} אָחוּז"
 
     from_high = round((high - today) / high * 100, 2)
     return {
-        "current": round(today, 2),
+        "current": today,
         "change_day": format_change(hist.iloc[-2]["Close"], today),
         "change_week": format_change(week, today),
         "change_3m": format_change(quarter, today),
@@ -133,7 +150,7 @@ async def main_loop():
             upload_to_yemot("temp.wav", path)
             print(f"✅ הועלה לשלוחה {path}")
 
-        await asyncio.sleep(60)
+        await asyncio.sleep(180)  # כל 3 דקות
 
 if __name__ == "__main__":
     asyncio.run(main_loop())
