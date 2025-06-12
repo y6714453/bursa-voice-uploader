@@ -43,7 +43,7 @@ def format_number_hebrew(number):
             return build_hebrew_number_parts(int(number))
         else:
             whole = build_hebrew_number_parts(int(number))
-            decimal = int(str(number).split('.')[1])
+            decimal = int(str(number).split('.')[1][:2])
             decimal_word = refine_hebrew_number(num2words(decimal, lang='he'))
             return f"{whole} נְקוּדָה {decimal_word}"
     except:
@@ -53,18 +53,29 @@ def build_hebrew_number_parts(number):
     parts = []
     thousands = number // 1000
     hundreds = (number % 1000) // 100
+    tens = (number % 100) // 10
+    units = number % 10
     tens_units = number % 100
 
     if thousands:
-        parts.append(refine_hebrew_number(num2words(thousands, lang='he')) + " אֶלֶף")
+        if thousands in [3, 4]:
+            parts.append(refine_hebrew_number(num2words(thousands, lang='he')) + "ת אֲלָפִים")
+        elif thousands < 10:
+            parts.append(refine_hebrew_number(num2words(thousands, lang='he')) + " אֶלֶף")
+        else:
+            parts.append(refine_hebrew_number(num2words(thousands, lang='he')) + " אֶלֶף")
+
     if hundreds:
-        if parts:
+        if thousands and (tens or units):
             parts.append("וֵ" + refine_hebrew_number(num2words(hundreds * 100, lang='he')))
         else:
             parts.append(refine_hebrew_number(num2words(hundreds * 100, lang='he')))
+
     if tens_units:
-        # אם אין מאות – נוסיף "ו" בין אלפים לעשרות-יחידות
-        if parts and (hundreds == 0):
+        if hundreds:
+            # בין מאות לעשרות לא מוסיפים ו'
+            parts.append(refine_hebrew_number(num2words(tens_units, lang='he')))
+        elif thousands and not hundreds:
             parts.append("וֵ" + refine_hebrew_number(num2words(tens_units, lang='he')))
         else:
             parts.append(refine_hebrew_number(num2words(tens_units, lang='he')))
