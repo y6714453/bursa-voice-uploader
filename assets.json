@@ -1,0 +1,9 @@
+[
+  { "symbol": "^SPX", "name": "אֵס אֵנְד פִּי חָמֵש מֵאוֹת", "type": "index", "target_path": "ivr2:/1/1/1/" },
+  { "symbol": "NVDA", "name": "אֵנְבִידְיָה", "type": "stock_us", "target_path": "ivr2:/1/3/1/" },
+  { "symbol": "TEVA.TA", "name": "טֵבָע", "type": "stock_il", "target_path": "ivr2:/1/3/7/" },
+  { "symbol": "BTC-USD", "name": "בִּיטְקוֹיְן", "type": "crypto", "target_path": "ivr2:/1/4/1/" },
+  { "symbol": "ILS=X", "name": "דוֹלָר אָמֵרִיקָאִי", "type": "forex", "target_path": "ivr2:/1/5/1/" },
+  { "symbol": "XLF", "name": "פִינָנְסִים", "type": "sector", "target_path": "ivr2:/1/2/3/" },
+  { "symbol": "GC=F", "name": "זָהָב", "type": "commodity", "target_path": "ivr2:/1/6/1/" }
+]
