@@ -16,7 +16,6 @@ TOKEN = f"{USERNAME}:{PASSWORD}"
 ASSETS_FILE = "assets.json"
 FFMPEG_PATH = "./bin/ffmpeg"
 
-# הורדת ffmpeg אם לא קיים
 def ensure_ffmpeg():
     if not os.path.exists(FFMPEG_PATH):
         print("⬇️ מוריד ffmpeg...")
@@ -60,7 +59,7 @@ def format_number_hebrew(number):
     try:
         number = float(number)
         if number >= 1000 and not number.is_integer():
-            number = round(number)  # ביטול נקודה עשרונית במספרים מעל 1000
+            number = round(number)
 
         if number.is_integer():
             number = int(number)
@@ -96,17 +95,17 @@ def create_text(asset, data):
     elif type_ == "sector":
         intro = f"סֵקְטוֹר {name} עוֹמֵד כָּעֵת על {current} {unit}."
     elif type_ == "stock_il":
-        intro = f"מֵנָיָת {name} נִסְחֵרֵת כָּעֵת בֵשׁוֹבִי שֵׁל {current} {unit}."
+        intro = f"מֵנָיָת {name} נִסְחֵרֵת כָּעֵת בֵּשׁוֹבִי שֵׁל {current} {unit}."
     elif type_ == "stock_us":
-        intro = f"מֵנָיָת {name} נִסְחֵרֵת כָּעֵת בֵשׁוֹבִי שֵׁל {current} {unit}."
+        intro = f"מֵנָיָת {name} נִסְחֵרֵת כָּעֵת בֵּשׁוֹבִי שֵׁל {current} {unit}."
     elif type_ == "crypto":
-        intro = f"מָטְבֵע {name} נסחר כָּעֵת בֵשָׁעָר שֵׁל {current} דוֹלָר."
+        intro = f"מָטְבֵּע {name} נסחר כָּעֵת בֵּשָׁעָר שֵׁל {current} דוֹלָר."
     elif type_ == "forex":
         intro = f"{name} אֵחָד שָבֵה לֵ {current} שְקָלִים."
     elif type_ == "commodity":
-        intro = f"{name} נסחר כָּעֵת בשער של {current} דוֹלָר."
+        intro = f"{name} נסחר כָּעֵת בֵּשָׁעָר של {current} דוֹלָר."
     else:
-        intro = f"{name} נסחר כעת ב{current}"
+        intro = f"{name} ֵּנסחר כעת ב{current}"
 
     full_text = (
         f"{intro} "
@@ -135,29 +134,39 @@ def upload_to_yemot(wav_file, path):
     })
     requests.post("https://www.call2all.co.il/ym/api/UploadFile", data=m, headers={'Content-Type': m.content_type})
 
+def is_today_in_history(hist):
+    today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+    return today_str in hist.index.strftime("%Y-%m-%d")
+
+def format_change(from_, to, prefix, trading_day_exists=True):
+    percent = round((to - from_) / from_ * 100, 2)
+    if prefix == "מתחילת היום" and not trading_day_exists:
+        return "הבורסה טרם נפתחה – הנתונים הם מיום המסחר האחרון."
+    direction = "עלייה" if percent > 0 else "ירידה"
+    return f"{prefix} נרשמה {direction} של {format_number_hebrew(abs(percent))} אחוז"
+
 def get_stock_data(symbol):
     t = yf.Ticker(symbol)
     hist = t.history(period="1y")
     if hist.empty:
         return None
 
+    trading_day_exists = is_today_in_history(hist)
     today = hist.iloc[-1]["Close"]
+    if not trading_day_exists and len(hist) >= 2:
+        yesterday = hist.iloc[-2]["Close"]
+    else:
+        yesterday = hist.iloc[-2]["Close"] if len(hist) >= 2 else today
+
     week = hist.iloc[-5]["Close"] if len(hist) >= 5 else today
     quarter = hist.iloc[-60]["Close"] if len(hist) >= 60 else today
     year = hist.iloc[0]["Close"]
     high = hist["Close"].max()
-
-    def format_change(from_, to, prefix):
-        percent = round((to - from_) / from_ * 100, 2)
-        if percent == 0:
-            return f"{prefix} לא חל שינוי"
-        direction = "עלייה" if percent > 0 else "ירידה"
-        return f"{prefix} נרשמה {direction} של {format_number_hebrew(abs(percent))} אחוז"
-
     from_high = round((high - today) / high * 100, 2)
+
     return {
         "current": today,
-        "change_day": format_change(hist.iloc[-2]["Close"], today, "מתחילת היום"),
+        "change_day": format_change(yesterday, today, "מתחילת היום", trading_day_exists),
         "change_week": format_change(week, today, "מתחילת השבוע"),
         "change_3m": format_change(quarter, today, "בשלושת החודשים האחרונים"),
         "change_year": format_change(year, today, "מתחילת השנה"),
