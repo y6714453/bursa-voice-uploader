@@ -119,7 +119,7 @@ def create_text(asset, data):
     return full_text
 
 async def text_to_speech(text, filename):
-    communicate = Communicate(text, voice="he-IL-AvriNeural", rate="-20%")
+    communicate = Communicate(text, voice="he-IL-AvriNeural", rate="-10%")
     await communicate.save(filename)
 
 def convert_to_wav(mp3_file, wav_file):
