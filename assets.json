@@ -20,12 +20,12 @@
   { "symbol": "XLC", "name": "תִקְשוֹרֵת", "type": "sector", "target_path": "ivr2:/1/1/0/10/" },
   { "symbol": "XLB", "name": "חוֹמְרֵי גֵלֵם", "type": "sector", "target_path": "ivr2:/1/1/0/11/" },
 
-  { "symbol": "NVDA", "name": "אֵנְבִידְיָה", "type": "stock_us", "target_path": "ivr2:/1/3/1/" },
-  { "symbol": "AAPL", "name": "אָפֵּל", "type": "stock_us", "target_path": "ivr2:/1/3/2/" },
-  { "symbol": "TSLA", "name": "טֵסְלָה", "type": "stock_us", "target_path": "ivr2:/1/3/3/" },
-  { "symbol": "AMZN", "name": "אָמָאזוֹן", "type": "stock_us", "target_path": "ivr2:/1/3/4/" },
-  { "symbol": "MSFT", "name": "מָיְיקְרוֹסוֹפְט", "type": "stock_us", "target_path": "ivr2:/1/3/5/" },
-  { "symbol": "META", "name": "מֵטָא", "type": "stock_us", "target_path": "ivr2:/1/3/6/" },
+  { "symbol": "NVDA", "name": "אֵנְבִידְיָה", "type": "stock_us", "target_path": "ivr2:/1/2/1/1/" },
+  { "symbol": "AAPL", "name": "אָפֵּל", "type": "stock_us", "target_path": "ivr2:/1/2/1/2/" },
+  { "symbol": "TSLA", "name": "טֵסְלָה", "type": "stock_us", "target_path": "ivr2:/1/2/1/3/" },
+  { "symbol": "AMZN", "name": "אָמָאזוֹן", "type": "stock_us", "target_path": "ivr2:/1/2/1/4/" },
+  { "symbol": "MSFT", "name": "מָיְיקְרוֹסוֹפְט", "type": "stock_us", "target_path": "ivr2:/1/2/1/5/" },
+  { "symbol": "META", "name": "מֵטָא", "type": "stock_us", "target_path": "ivr2:/1/2/1/6/" },
 
   { "symbol": "TEVA.TA", "name": "טֵבָע", "type": "stock_il", "target_path": "ivr2:/1/3/7/" },
   { "symbol": "ISCD.TA", "name": "יִשְרָאכָּרְט", "type": "stock_il", "target_path": "ivr2:/1/3/8/" },
