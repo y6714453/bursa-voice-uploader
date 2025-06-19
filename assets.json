@@ -48,5 +48,5 @@
   { "symbol": "ILS=X", "name": "דוֹלָר אָמֵרִיקָאִי", "type": "forex", "target_path": "ivr2:/1/5/1/" },
   { "symbol": "EURILS=X", "name": "יוּרוֹ", "type": "forex", "target_path": "ivr2:/1/5/2/" },
   { "symbol": "GBPILS=X", "name": "לּירָה סְטֵרְלִינְג", "type": "forex", "target_path": "ivr2:/1/5/3/" },
-  { "symbol": "JPYILS=X", "name": "יֵן יפני", "type": "forex", "target_path": "ivr2:/1/5/4/" },
+  { "symbol": "JPYILS=X", "name": "יֵן יפני", "type": "forex", "target_path": "ivr2:/1/5/4/" }
 ]
