@@ -9,6 +9,9 @@ from requests_toolbelt.multipart.encoder import MultipartEncoder
 import requests
 import urllib.request
 import tarfile
+import warnings
+
+warnings.filterwarnings("ignore")  # הסתרת אזהרות מערכת
 
 USERNAME = "0733181201"
 PASSWORD = "6714453"
@@ -124,7 +127,12 @@ async def text_to_speech(text, filename):
 
 def convert_to_wav(mp3_file, wav_file):
     ensure_ffmpeg()
-    subprocess.run([FFMPEG_PATH, "-y", "-i", mp3_file, "-ar", "8000", "-ac", "1", "-acodec", "pcm_s16le", wav_file])
+    with open(os.devnull, 'w') as devnull:
+        subprocess.run(
+            [FFMPEG_PATH, "-y", "-i", mp3_file, "-ar", "8000", "-ac", "1", "-acodec", "pcm_s16le", wav_file],
+            stdout=devnull,
+            stderr=devnull
+        )
 
 def upload_to_yemot(wav_file, path):
     m = MultipartEncoder(fields={
@@ -187,7 +195,6 @@ async def main_loop():
             print(f"📈 {name} ({symbol})...")
             data = get_stock_data(symbol)
             if data is None:
-                print(f"⚠️ אין נתונים עבור {symbol}")
                 continue
 
             text = create_text(asset, data)
