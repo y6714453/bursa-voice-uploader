@@ -43,7 +43,7 @@
   { "symbol": "SI=F", "name": "הָכֵּסֵף", "type": "commodity", "target_path": "ivr2:/1/4/2/" },
   { "symbol": "CL=F", "name": "הָנֵפְט", "type": "commodity", "target_path": "ivr2:/1/4/3/" },
   { "symbol": "NG=F", "name": "גָז טִבְעִי", "type": "commodity", "target_path": "ivr2:/1/4/4/" },
-  { "symbol": "HG=F", "name": "הָנֵחוֹשֵת", "type": "commodity", "target_path": "ivr2:/1/4/5/" }
+  { "symbol": "HG=F", "name": "הָנֵחוֹשֵת", "type": "commodity", "target_path": "ivr2:/1/4/5/" },
 
   { "symbol": "ILS=X", "name": "דוֹלָר אָמֵרִיקָאִי", "type": "forex", "target_path": "ivr2:/1/5/1/" },
   { "symbol": "EURILS=X", "name": "יוּרוֹ", "type": "forex", "target_path": "ivr2:/1/5/2/" },
